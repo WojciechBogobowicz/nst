@@ -1,0 +1,5 @@
+__pycache__
+images/contents/*
+images/styles/*
+images/results/*
+style_transfer_tutorial.ipynb
