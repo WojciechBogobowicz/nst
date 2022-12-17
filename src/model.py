@@ -11,7 +11,7 @@ import sewar.full_ref
 import src.utils as utils
 
 
-class MultiNSTImageTrainer:
+class TraintersSelectioner:
     def __init__(self, style_image, content_image, trainers_num) -> None:
         self.__trainers = self.__init_trainers(style_image, content_image, trainers_num)
         self.history = [self.__trainers]
@@ -24,54 +24,38 @@ class MultiNSTImageTrainer:
             trainers.append(trainer)
         return pd.Series(trainers)
 
-    def __create_random_compiled_trainer(
-        self, style_image, content_image, total_variation_weight=30
-    ):
-        style_layers, content_layers = self.__get_random_layers()
-        trainer = NSTImageTrainer(
-            style_image,
-            content_image,
-            style_layers,
-            content_layers,
-            total_variation_weight,
-        )
-        compiler = tf.keras.optimizers.Adam(
-            learning_rate=0.02, beta_1=0.99, epsilon=1e-1
-        )
-        trainer.compile(compiler)  # LBFGS do obczajenia
-        return trainer
+    # def __create_random_compiled_trainer(
+    #     self, style_image, content_image, total_variation_weight=30
+    # ):
+    #     style_layers, content_layers = self.__get_random_layers()
+    #     trainer = NSTImageTrainer(
+    #         style_image,
+    #         content_image,
+    #         style_layers,
+    #         content_layers,
+    #         total_variation_weight,
+    #     )
+    #     compiler = tf.keras.optimizers.Adam(
+    #         learning_rate=0.02, beta_1=0.99, epsilon=1e-1
+    #     )
+    #     trainer.compile(compiler)  # LBFGS do obczajenia
+    #     return trainer
 
-    @staticmethod
-    def __get_random_layers() -> tuple[list[str], list[str]]:
-        conv_layers = [
-            layer_name
-            for layer_name in NSTImageTrainer.model_layers_names()
-            if "conv" in layer_name
-        ]
-        conv_layers_num = len(conv_layers)
-
-        content_weights_idx = range(conv_layers_num)
-        content_weights = scipy.stats.norm.pdf(
-            content_weights_idx, loc=conv_layers_num / 2, scale=conv_layers_num / 3.75
-        )
-        content_weights /= sum(content_weights)
-        content_layers = random.choices(conv_layers, weights=content_weights, k=1)
-
-        skip_layers = 4
-        style_weights_idx = range(conv_layers_num - skip_layers)
-        style_layers_num_weights = scipy.stats.norm.pdf(
-            style_weights_idx,
-            loc=(conv_layers_num - skip_layers) / 20,
-            scale=conv_layers_num / 4,
-        )
-        style_layers_num_weights /= sum(style_layers_num_weights)
-        style_layers_num_weights = np.cumsum(style_layers_num_weights)
-        style_layers_num = (
-            random.random() > style_layers_num_weights
-        ).sum() + skip_layers
-        style_layers = random.sample(conv_layers, k=style_layers_num)
-        style_layers.sort()
-        return style_layers, content_layers
+    # @staticmethod
+    # def __get_random_layers() -> tuple[list[str], list[str]]:
+        # conv_layers = [
+        #     layer_name
+        #     for layer_name in NSTImageTrainer.model_layers_names()
+        #     if "conv" in layer_name
+        # ]
+    #     content_layers = utils.normal_choice(conv_layers, rel_loc=0.5, rel_scale=0.36)
+    #     style_layers = utils.random_length_normal_choices(
+    #         conv_layers,
+    #         min_output_elements_num=2,
+    #         rel_loc=0.05, 
+    #         rel_scale=0.25
+    #     )
+    #     return style_layers, content_layers
 
     def train(self, epochs, steps) -> None:
         for i, trainer in enumerate(self.trainers):
@@ -198,6 +182,38 @@ class NSTImageTrainer(tf.keras.models.Model):
     def model_layers_names():
         return [layer.name for layer in StyleContentExtractor.base_model.layers]
 
+    @classmethod
+    def from_layers_selectors(
+        self, style_image, content_image, 
+        style_layers_selector,
+        content_layers_selector, 
+        trainer_kw={"total_variation_weight": 30},
+        style_layers_selector_kw=dict(min_output_elements_num=2, rel_loc=0.05, rel_scale=0.25), 
+        content_layers_selector_kw=dict(rel_loc=0.5, rel_scale=0.26),
+    ):
+        
+        layers = NSTImageTrainer.model_layers_names()
+        conv_layers = [name for name in layers if "conv" in name]
+        
+        style_layers =  style_layers_selector(conv_layers, **style_layers_selector_kw)
+        content_layers = content_layers_selector(conv_layers, **content_layers_selector_kw)
+        
+        trainer = NSTImageTrainer(
+            style_image,
+            content_image,
+            style_layers,
+            content_layers,
+            **trainer_kw
+        )
+        return trainer
+
+
+
+
+
+
+
+
 
 class StyleContentExtractor(tf.keras.models.Model):
     base_model = tf.keras.applications.VGG19(include_top=False, weights="imagenet")
@@ -245,6 +261,8 @@ class StyleContentExtractor(tf.keras.models.Model):
                 f"Given tensor have values grater than {input_max_value = }, {biggest_input = }"
             )
 
-    @staticmethod
-    def model_layers_names():
-        return [layer.name for layer in StyleContentExtractor.base_model.layers]
+    @classmethod
+    def model_layers_names(cls):
+        return [layer.name for layer in cls.base_model.layers]
+    
+    
