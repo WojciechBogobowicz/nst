@@ -12,55 +12,17 @@ import src.utils as utils
 
 
 class TraintersSelectioner:
-    def __init__(self, style_image, content_image, trainers_num) -> None:
-        self.__trainers = self.__init_trainers(style_image, content_image, trainers_num)
+    def __init__(self, trainers) -> None:
+        self.__trainers = pd.Series(trainers)
         self.history = [self.__trainers]
 
-    def __init_trainers(self, style_image, content_image, trainers_num):
-        print("Trainers creation")
-        trainers = []
-        for _ in tqdm(range(trainers_num)):
-            trainer = self.__create_random_compiled_trainer(style_image, content_image)
-            trainers.append(trainer)
-        return pd.Series(trainers)
-
-    # def __create_random_compiled_trainer(
-    #     self, style_image, content_image, total_variation_weight=30
-    # ):
-    #     style_layers, content_layers = self.__get_random_layers()
-    #     trainer = NSTImageTrainer(
-    #         style_image,
-    #         content_image,
-    #         style_layers,
-    #         content_layers,
-    #         total_variation_weight,
-    #     )
-    #     compiler = tf.keras.optimizers.Adam(
-    #         learning_rate=0.02, beta_1=0.99, epsilon=1e-1
-    #     )
-    #     trainer.compile(compiler)  # LBFGS do obczajenia
-    #     return trainer
-
-    # @staticmethod
-    # def __get_random_layers() -> tuple[list[str], list[str]]:
-        # conv_layers = [
-        #     layer_name
-        #     for layer_name in NSTImageTrainer.model_layers_names()
-        #     if "conv" in layer_name
-        # ]
-    #     content_layers = utils.normal_choice(conv_layers, rel_loc=0.5, rel_scale=0.36)
-    #     style_layers = utils.random_length_normal_choices(
-    #         conv_layers,
-    #         min_output_elements_num=2,
-    #         rel_loc=0.05, 
-    #         rel_scale=0.25
-    #     )
-    #     return style_layers, content_layers
-
-    def train(self, epochs, steps) -> None:
+    def train(self, epochs, steps, callbacks=None) -> None:
         for i, trainer in enumerate(self.trainers):
-            print(f"Traing for trainer {i} from {len(self.trainers)-1}")
+            print(f"Traing for trainer {i+1} from {len(self.trainers)}")
             trainer.training_loop(epochs=epochs, steps_per_epoch=steps)
+            if callbacks:
+                for callback in callbacks:
+                    callback()
 
     def save_history(self):
         self.history.append(self.__trainers)
@@ -115,11 +77,14 @@ class NSTImageTrainer(tf.keras.models.Model):
         self.__style_image = style_image
         self.__content_image = content_image
 
-    def training_loop(self, steps_per_epoch, epochs):
+    def training_loop(self, steps_per_epoch, epochs, callbacks=None):
         for epoch_num in range(1, epochs + 1):
             print(f"Epoch {epoch_num}/{epochs}:")
             for _ in tqdm(range(steps_per_epoch)):
                 self.train_step()
+            if callbacks:
+                for callback in callbacks:
+                    callback()
 
     @tf.function()
     @tf.autograph.experimental.do_not_convert
@@ -134,7 +99,6 @@ class NSTImageTrainer(tf.keras.models.Model):
         self.__output_image.assign(utils.tf_utils.clip_0_1(self.__output_image))
 
     def style_content_loss(self, outputs):
-        # ToDo: dodać 2 hiperparetry do -> loss = alpha*style_loss + beta*content_loss
         style_outputs = outputs["style"]
         content_outputs = outputs["content"]
         style_loss = tf.add_n(
@@ -184,35 +148,30 @@ class NSTImageTrainer(tf.keras.models.Model):
 
     @classmethod
     def from_layers_selectors(
-        self, style_image, content_image, 
+        self,
+        style_image,
+        content_image,
         style_layers_selector,
-        content_layers_selector, 
+        content_layers_selector,
         trainer_kw={"total_variation_weight": 30},
-        style_layers_selector_kw=dict(min_output_elements_num=2, rel_loc=0.05, rel_scale=0.25), 
+        style_layers_selector_kw=dict(
+            min_output_elements_num=2, rel_loc=0.05, rel_scale=0.25
+        ),
         content_layers_selector_kw=dict(rel_loc=0.5, rel_scale=0.26),
     ):
-        
+
         layers = NSTImageTrainer.model_layers_names()
         conv_layers = [name for name in layers if "conv" in name]
-        
-        style_layers =  style_layers_selector(conv_layers, **style_layers_selector_kw)
-        content_layers = content_layers_selector(conv_layers, **content_layers_selector_kw)
-        
+
+        style_layers = style_layers_selector(conv_layers, **style_layers_selector_kw)
+        content_layers = content_layers_selector(
+            conv_layers, **content_layers_selector_kw
+        )
+
         trainer = NSTImageTrainer(
-            style_image,
-            content_image,
-            style_layers,
-            content_layers,
-            **trainer_kw
+            style_image, content_image, style_layers, content_layers, **trainer_kw
         )
         return trainer
-
-
-
-
-
-
-
 
 
 class StyleContentExtractor(tf.keras.models.Model):
@@ -264,5 +223,3 @@ class StyleContentExtractor(tf.keras.models.Model):
     @classmethod
     def model_layers_names(cls):
         return [layer.name for layer in cls.base_model.layers]
-    
-    
