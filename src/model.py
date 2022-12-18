@@ -57,6 +57,7 @@ class NSTImageTrainer(tf.keras.models.Model):
         content_weight=1e4,
         style_weight=1e-2,
         total_variation_weight=30,
+        noise=0.25,
         *args,
         **kwargs,
     ) -> None:
@@ -70,7 +71,12 @@ class NSTImageTrainer(tf.keras.models.Model):
         self.num_content_layers = len(content_layers)
         self.style_targets = self.extractor(style_image)["style"]
         self.content_targets = self.extractor(content_image)["content"]
-        self.__output_image = tf.Variable(content_image)
+        noise = tf.random.uniform(tf.shape(content_image), -noise, noise)
+        output_image = tf.add(content_image, noise)
+        output_image = tf.clip_by_value(
+            output_image, clip_value_min=0.0, clip_value_max=1.0
+        )
+        self.__output_image = tf.Variable(output_image)
         self.style_weight = style_weight
         self.content_weight = content_weight
         self.total_variation_weight = total_variation_weight
