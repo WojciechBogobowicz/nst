@@ -2,6 +2,11 @@ __pycache__
 images/contents/*
 images/styles/*
 images/results/*
+images/trainers/*
+
+!images/contents/demo*
+!images/styles/demo*
+
 style_transfer_tutorial.ipynb
 tempCodeRunnerFile.py
 *checkpoint.ipynb
