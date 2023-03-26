@@ -10,5 +10,6 @@ dependencies:
   - tensorflow=2.10.0
   - tqdm=4.65.0
   - ipykernel=6.19.2
+  - pip
   - pip:
     - sewar
