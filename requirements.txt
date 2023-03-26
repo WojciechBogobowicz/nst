@@ -1,0 +1,9 @@
+matplotlib==3.5.1
+numpy==1.23.5
+pandas==1.4.1
+Pillow==9.4.0
+scipy==1.8.0
+tensorflow==2.12.0
+tensorflow_intel==2.11.0
+tqdm==4.64.0
+sewar
