@@ -1,5 +1,5 @@
 # This file may be used to create an environment using:
-# $ conda create --name nst_env --file conda_requirements.txt
+# $ conda create --name nst_env --file /requirements/conda_requirements.txt
 # platform: win-64
 @EXPLICIT
 https://repo.anaconda.com/pkgs/main/win-64/_tflow_select-2.3.0-mkl.conda
