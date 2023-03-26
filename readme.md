@@ -1,12 +1,18 @@
-# Installation
+# Installation:
+
+`Note:`  
+*Environment setups presented below do not include GPU acceleration initialization. If you want setup it too, you need to install proper CUDA, for your graphic card. Details how to do it, can be found on [tensorflow installation guide](https://www.tensorflow.org/install/pip?hl=en).*
+
+----
+
 ## Without virtual envs:
 *This approach isn't recommended due to potential dependency conflicts that may occur during installation process, but if it will work in your default environment it would be the fastest way.*
 ```console
-pip install -r ./requirements/raw_requrements.txt
+pip install -r ./requirements/raw_requirements.txt
 ```
 ## Conda installation:
 ```console
-conda create --name nst_env --file /requirements/conda_requirements.txt
+conda env create --file ./requirements/environment.yaml
 ```
 
 
@@ -20,9 +26,18 @@ pip install virtualenv
 ```console
 virtualenv nst_env
 ```
-3. Activate it:
+3. Activate it  
+
+on Windows
+
 ```console
-./test_env/Scripts/Activate.ps1
+./nst_env/Scripts/Activate.ps1
+```
+
+on Linux
+
+```console
+source ./nst_env/bin/activate
 ```
 4. Install requirements from file:
 ```console
