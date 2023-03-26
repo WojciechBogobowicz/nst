@@ -1,0 +1,10 @@
+matplotlib
+numpy
+pandas
+Pillow
+scipy
+tensorflow
+tensorflow_intel
+tqdm
+ipykernel
+sewar
