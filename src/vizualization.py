@@ -4,7 +4,12 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
-def plot_trained_images(trainers):
+def plot_trained_images(trainers: list) -> None:
+    """Plots the training images for each trainer.
+
+    Args:
+        trainers (list): list of objects with output_image atribute.
+    """
     sublots_dims = get_sublots_dims(len(trainers))
     subplot_size = 5
 
@@ -19,19 +24,39 @@ def plot_trained_images(trainers):
         plt.imshow(trainer.output_image)
 
 
-def get_sublots_dims(subplots_num):
+def get_sublots_dims(subplots_num: int) -> tuple[int, int]:
+    """Determine how to arrange number of subplots into grid.
+        Return number of rows, and columns in this grid.
+    Args:
+        subplots_num (int): Number of subplots to arrange
+
+    Raises:
+        RuntimeError: Triger if program will try to find dividor of subplots_num, 
+            that is lower than 0
+
+    Returns:
+        tuple[int, int]: numbers of rows and columns to arrange subplots
+    """
     potential_col_num = isqrt(subplots_num)
 
     while subplots_num % potential_col_num != 0:
         potential_col_num -= 1
         if potential_col_num < 0:
-            raise ValueError("Traing to find dividor lower than 0")
+            raise RuntimeError("Traing to find dividor lower than 0")
     col_num = potential_col_num
     row_num = int(subplots_num / col_num)
     return row_num, col_num
 
 
 def plot_trainer(trainer):
+    """Plots most important information about trainer on single image. 
+        That is output, style and content image, as well as layers used during the training.
+        Style layers are blue. Content layers are red. 
+        If one layer represents style as well content, then it is highlighted on blue with red border. 
+
+    Args:
+        trainer (NSTImageTrainer): NSTImageTrainer to vizualize.
+    """
     all_model_layers = trainer.model_layers_names()
     style_layers = trainer.style_layers
     content_layers = trainer.content_layers
@@ -108,7 +133,26 @@ def plot_trainer(trainer):
         plt.axis("off")
 
     
-def save_vizualizations(trainer, style_image_path, content_image_path, BASE_RESULT_PATH, BASE_TRAINER_PATH):
+def save_vizualizations(
+    trainer, 
+    style_image_path: str, 
+    content_image_path: str, 
+    output_image_folder: str, 
+    trainer_vizualizations_folder: str):
+    """Saves the trainer output image in output_image_folder 
+        and trainer vizualization in trainer_vizualizations_folder.
+        Both saves share the same filename. Filename is a composition of style image name
+        and content image name.
+        Saved vizualizations do not override each other, so if you save another vizualization
+        created with the same input images, then new vizualization get extra postfix to the filename.
+
+    Args:
+        trainer (NSTImageTrainer): Trainer to vizualize.
+        style_image_path (str): Path to style image.
+        content_image_path (str): Path to content image.
+        output_image_folder (str): Path to folder where output image will be stored.
+        trainer_vizualizations_folder (str): Path to folder where trainer vizualization will be stored.
+    """
     striped_style_path, _ = os.path.splitext(style_image_path)
     striped_content_path, _ = os.path.splitext(content_image_path)
 
@@ -117,13 +161,13 @@ def save_vizualizations(trainer, style_image_path, content_image_path, BASE_RESU
     ext = "jpg"
 
     img_name = f"{style_img_name}__{content_img_name}"
-    result_path = os.path.join(BASE_RESULT_PATH, f"{img_name}.{ext}")
-    trainer_path = os.path.join(BASE_TRAINER_PATH, f"{img_name}.{ext}")
+    result_path = os.path.join(output_image_folder, f"{img_name}.{ext}")
+    trainer_path = os.path.join(trainer_vizualizations_folder, f"{img_name}.{ext}")
 
     if os.path.exists(result_path):
         postfix = __find_unique_postfix(result_path)
-        result_path = os.path.join(BASE_RESULT_PATH, f"{img_name}{postfix}.{ext}")
-        trainer_path = os.path.join(BASE_TRAINER_PATH, f"{img_name}{postfix}.{ext}")
+        result_path = os.path.join(output_image_folder, f"{img_name}{postfix}.{ext}")
+        trainer_path = os.path.join(trainer_vizualizations_folder, f"{img_name}{postfix}.{ext}")
 
     trainer.output_image.save(result_path)
 
@@ -132,9 +176,17 @@ def save_vizualizations(trainer, style_image_path, content_image_path, BASE_RESU
 
 
 
-def __find_unique_postfix(path: str):
+def __find_unique_postfix(path: str) -> str:
+    """Find a unique postfix to given path.
+
+    Args:
+        path (str): Existing path to file.
+
+    Returns:
+        [str]: Postfix in "__([0-9]+)" format.
+    """
     filename, extension = os.path.splitext(path)
-    idx = 0
+    idx = 1
     new_filename = f"{filename}__({idx})"
     while os.path.exists(f"{new_filename}{extension}"):
         idx += 1
