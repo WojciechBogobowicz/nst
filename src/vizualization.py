@@ -175,7 +175,6 @@ def save_vizualizations(
     plt.savefig(trainer_path)
 
 
-
 def __find_unique_postfix(path: str) -> str:
     """Find a unique postfix to given path.
 
