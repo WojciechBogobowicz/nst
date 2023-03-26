@@ -17,6 +17,14 @@ conda env create --file ./requirements/environment.yaml
 
 
 ## Pip installation:
+
+----
+
+`Note:`  
+*Pip installation require python in version between 3.7-3.10*  
+
+----
+
 *If you want to create virtual env by your own in different way (for example using ide), then to it and go to step four.*
 1. Install library for virtual environments if you don't have it yet.
 ```console
