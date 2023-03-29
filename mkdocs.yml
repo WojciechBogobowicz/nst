@@ -1,0 +1,23 @@
+site_name: NST Docs
+
+theme:
+  name: "material"
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Homepage: index.md 
+  - Installation: installation.md
+  - Project structure: structure.md 
+  - Documentation: 
+    - model.py: model.md
+    - selectioner.py: selectioner.md
+    - vizualization.py: vizualization.md 
+    - utils: utils.md
+
+plugins:
+  - mkdocstrings
+  - search
+  # - offline
+
+repo_url: https://github.com/WojciechBogobowicz/nst
