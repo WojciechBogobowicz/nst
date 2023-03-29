@@ -79,5 +79,5 @@ pip install -r ./requirements/pip_requirements.txt
 
 # Quick start
 
-If you want to use your own images you should store them in `.\images\styles` and `.\images\contents` folders, but you may use example [style](images\styles\demo_picasso_music.jpg) and [content](images\contents\demo_pablo_picasso.jpg) images prepared for you.  
+If you want to use your own images you should store them in `./images/styles` and `./images/contents` folders, but you may use example [style](images/styles/demo_picasso_music.jpg) and [content](images/contents/demo_pablo_picasso.jpg) images prepared for you.  
 In the project folder there are two notebooks that implement generation process. [`nst_training.ipynb`](nst_training.ipynb) where you do not need to care about training parameters, but more computational power is required (it is good choice on start) and [`manual_training.ipynb`](manual_training.ipynb), which is faster, but provides only one generated image at the time (you can continue with it, when you want learn something about hyperparameters used during training - there are described there in detail). Notebooks are self explanatory, so just open one of them, and follow the descriptions.
